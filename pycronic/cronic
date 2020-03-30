@@ -21,6 +21,13 @@ socket.setdefaulttimeout(60)
 
 from pycronic.constants import default_config_file, error_report_tmpl, default_mail_title
 
+import pybrake
+
+notifier = pybrake.Notifier(project_id=os.environ["AIRBRAKE_PROJECT_ID"],
+                            project_key=os.environ["AIRBRAKE_PROJECT_KEY"],
+                            environment='development',
+                            host=os.environ["AIRBRAKE_HOST"])
+
 config_path = '/etc/pycronic.conf'
 
 
@@ -74,6 +81,7 @@ def main():
             fp = open(config_path, 'w')
         except IOError as e:
             print('Error occured when creating default config file: {}'.format(e))
+            notifier.notify(e)
             return False
         else:
            fp.write(default_config_file)
@@ -104,6 +112,7 @@ def main():
         ret_code = subprocess.call(command, stdout=stdout, stderr=stderr)
     except OSError as e:
         ret_code = 99
+        notifier.notify(e)
         stderr.write(traceback.format_exc())
     stdout.seek(0)
     stderr.seek(0)
